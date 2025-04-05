@@ -1,0 +1,11 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "currency_converter_agent": "./agents/currency_converter_agent/agent.py:agent",
+    "scraper_agent": "./agents/scraper_agent/agent.py:agent",
+    "data_analyst_agent": "./agents/data_analyst_agent/agent.py:agent",
+    "supervisor_agent": "./agents/supervisor_agent/agent.py:agent"
+  },
+  "env": "./.env",
+  "python_version": "3.13"
+}

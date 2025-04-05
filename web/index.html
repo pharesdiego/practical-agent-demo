@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Search Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Borel&family=Funnel+Display:wght@300..800&display=swap" rel="stylesheet">
+  <style>
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-top: 4px solid #6366f1;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-r from-gray-200 to-indigo-100 font-['Funnel_Display']">
+  <div class="container mx-auto p-6 max-w-4xl">
+    <h1 class="font-[Borel] text-6xl tracking-wide text-indigo-800 my-8 text-center">
+      Grocery Store
+    </h1>
+    <div class="mb-6">
+      <input 
+        type="text" 
+        id="searchInput"
+        placeholder="Search products..."
+        class="w-full p-4 rounded-lg shadow-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out"
+      >
+    </div>
+    <!-- Invitation message when no search has been made -->
+    <div id="invitation" class="mt-12 text-center text-gray-600 text-xl">
+      Please enter a keyword to search for products 🧀🍷🍞
+    </div>
+    
+    <div id="loading" class="hidden flex flex-col items-center text-indigo-800 mb-4">
+      <div class="spinner mb-2"></div>
+      <div class="text-xl animate-pulse">Searching...</div>
+    </div>
+    
+    <ul id="productList" class="space-y-6"></ul>
+  </div>
+
+<script>
+  const products = [
+    {
+      "id": "1",
+      "name": "Apple",
+      "price_usd": "0.99",
+      "weight": "200 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "2",
+      "name": "Banana",
+      "price_usd": "0.59",
+      "weight": "150 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "3",
+      "name": "Orange",
+      "price_usd": "1.29",
+      "weight": "250 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "4",
+      "name": "Grapes",
+      "price_usd": "2.49",
+      "weight": "500 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "5",
+      "name": "Strawberry",
+      "price_usd": "3.99",
+      "weight": "400 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "6",
+      "name": "Carrot",
+      "price_usd": "0.89",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "7",
+      "name": "Broccoli",
+      "price_usd": "1.59",
+      "weight": "500 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "8",
+      "name": "Lettuce",
+      "price_usd": "1.09",
+      "weight": "350 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "9",
+      "name": "Tomato",
+      "price_usd": "1.49",
+      "weight": "400 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "10",
+      "name": "Cucumber",
+      "price_usd": "0.99",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "11",
+      "name": "Milk",
+      "price_usd": "2.49",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "12",
+      "name": "Cheddar Cheese",
+      "price_usd": "3.99",
+      "weight": "250 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "13",
+      "name": "Yogurt",
+      "price_usd": "1.29",
+      "weight": "150 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "14",
+      "name": "Butter",
+      "price_usd": "2.79",
+      "weight": "200 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "15",
+      "name": "Cream",
+      "price_usd": "1.99",
+      "weight": "500 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "16",
+      "name": "Bread",
+      "price_usd": "2.49",
+      "weight": "500 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "17",
+      "name": "Croissant",
+      "price_usd": "1.29",
+      "weight": "80 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "18",
+      "name": "Bagel",
+      "price_usd": "1.19",
+      "weight": "100 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "19",
+      "name": "Muffin",
+      "price_usd": "1.49",
+      "weight": "120 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "20",
+      "name": "Bun",
+      "price_usd": "1.09",
+      "weight": "90 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "21",
+      "name": "Chicken Breast",
+      "price_usd": "5.99",
+      "weight": "1000 g",
+      "category": "Meats"
+    },
+    {
+      "id": "22",
+      "name": "Beef Steak",
+      "price_usd": "12.99",
+      "weight": "1000 g",
+      "category": "Meats"
+    },
+    {
+      "id": "23",
+      "name": "Pork Chop",
+      "price_usd": "7.49",
+      "weight": "800 g",
+      "category": "Meats"
+    },
+    {
+      "id": "24",
+      "name": "Turkey Slices",
+      "price_usd": "4.99",
+      "weight": "250 g",
+      "category": "Meats"
+    },
+    {
+      "id": "25",
+      "name": "Sausage",
+      "price_usd": "3.99",
+      "weight": "500 g",
+      "category": "Meats"
+    },
+    {
+      "id": "26",
+      "name": "Orange Juice",
+      "price_usd": "3.49",
+      "weight": "1000 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "27",
+      "name": "Apple Juice",
+      "price_usd": "3.29",
+      "weight": "1000 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "28",
+      "name": "Milkshake",
+      "price_usd": "2.99",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "29",
+      "name": "Iced Tea",
+      "price_usd": "1.99",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "30",
+      "name": "Lemonade",
+      "price_usd": "2.49",
+      "weight": "1000 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "31",
+      "name": "Watermelon",
+      "price_usd": "4.99",
+      "weight": "1500 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "32",
+      "name": "Pineapple",
+      "price_usd": "3.49",
+      "weight": "1200 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "33",
+      "name": "Blueberries",
+      "price_usd": "4.29",
+      "weight": "300 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "34",
+      "name": "Peach",
+      "price_usd": "1.59",
+      "weight": "200 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "35",
+      "name": "Spinach",
+      "price_usd": "1.79",
+      "weight": "250 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "36",
+      "name": "Zucchini",
+      "price_usd": "1.49",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "37",
+      "name": "Green Pepper",
+      "price_usd": "1.39",
+      "weight": "250 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "38",
+      "name": "Milk (Skim)",
+      "price_usd": "2.29",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "39",
+      "name": "Greek Yogurt",
+      "price_usd": "1.79",
+      "weight": "170 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "40",
+      "name": "French Baguette",
+      "price_usd": "2.19",
+      "weight": "400 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "41",
+      "name": "Brioche",
+      "price_usd": "3.29",
+      "weight": "450 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "42",
+      "name": "Salmon Fillet",
+      "price_usd": "14.99",
+      "weight": "600 g",
+      "category": "Meats"
+    },
+    {
+      "id": "43",
+      "name": "Bacon",
+      "price_usd": "5.49",
+      "weight": "300 g",
+      "category": "Meats"
+    },
+    {
+      "id": "44",
+      "name": "Energy Drink",
+      "price_usd": "2.49",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "45",
+      "name": "Herbal Tea",
+      "price_usd": "3.49",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "46",
+      "name": "Mandarin",
+      "price_usd": "2.79",
+      "weight": "500 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "47",
+      "name": "Kale",
+      "price_usd": "2.49",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "48",
+      "name": "Provolone Cheese",
+      "price_usd": "4.49",
+      "weight": "200 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "49",
+      "name": "Rye Bread",
+      "price_usd": "2.59",
+      "weight": "600 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "50",
+      "name": "Tuna Steak",
+      "price_usd": "11.99",
+      "weight": "500 g",
+      "category": "Meats"
+    },
+    {
+      "id": "51",
+      "name": "Merlot Wine",
+      "price_usd": "15.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "52",
+      "name": "Chardonnay Wine",
+      "price_usd": "14.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "53",
+      "name": "Cabernet Sauvignon Wine",
+      "price_usd": "18.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "54",
+      "name": "Pinot Noir Wine",
+      "price_usd": "17.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "55",
+      "name": "Sauvignon Blanc Wine",
+      "price_usd": "16.29",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "56",
+      "name": "Prosecco",
+      "price_usd": "13.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "57",
+      "name": "Riesling Wine",
+      "price_usd": "14.79",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "58",
+      "name": "Zinfandel Wine",
+      "price_usd": "15.59",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "59",
+      "name": "Malbec Wine",
+      "price_usd": "16.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "60",
+      "name": "Shiraz Wine",
+      "price_usd": "14.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "1000",
+      "name": "Red Wine",
+      "price_usd": "3.49",
+      "weight": "500 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "1001",
+      "name": "White Wine",
+      "price_usd": "3.29",
+      "weight": "500 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12000",
+      "name": "Rosé Wine",
+      "price_usd": "12.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12001",
+      "name": "Tempranillo Wine",
+      "price_usd": "16.89",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12002",
+      "name": "Grenache Wine",
+      "price_usd": "15.29",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12003",
+      "name": "Barbera Wine",
+      "price_usd": "17.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12004",
+      "name": "Sangiovese Wine",
+      "price_usd": "16.79",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12005",
+      "name": "Red Blend Wine",
+      "price_usd": "13.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12006",
+      "name": "White Blend Wine",
+      "price_usd": "12.79",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12007",
+      "name": "Ice Wine",
+      "price_usd": "21.99",
+      "weight": "375 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12008",
+      "name": "Dessert Wine",
+      "price_usd": "19.49",
+      "weight": "500 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12009",
+      "name": "Port Wine",
+      "price_usd": "22.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12010",
+      "name": "Sparkling Rosé",
+      "price_usd": "14.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12011",
+      "name": "Cava",
+      "price_usd": "13.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12012",
+      "name": "Brut Champagne",
+      "price_usd": "29.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12013",
+      "name": "Lambrusco Wine",
+      "price_usd": "11.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12014",
+      "name": "Moscato Wine",
+      "price_usd": "12.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12015",
+      "name": "Viognier Wine",
+      "price_usd": "16.19",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12016",
+      "name": "Petit Verdot Wine",
+      "price_usd": "17.99",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12017",
+      "name": "Gamay Wine",
+      "price_usd": "14.89",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12018",
+      "name": "Garnacha Wine",
+      "price_usd": "15.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12019",
+      "name": "Wine (Generic Table Red)",
+      "price_usd": "4.99",
+      "weight": "1 L",
+      "category": "Wines"
+    },
+    {
+      "id": "12020",
+      "name": "Wine (Generic Table White)",
+      "price_usd": "4.79",
+      "weight": "1 L",
+      "category": "Wines"
+    },
+    {
+      "id": "12021",
+      "name": "House Red Wine",
+      "price_usd": "6.49",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "12022",
+      "name": "House White Wine",
+      "price_usd": "6.29",
+      "weight": "750 ml",
+      "category": "Wines"
+    },
+    {
+      "id": "61",
+      "name": "Gouda Cheese",
+      "price_usd": "5.49",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "62",
+      "name": "Brie Cheese",
+      "price_usd": "6.29",
+      "weight": "200 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "63",
+      "name": "Blue Cheese",
+      "price_usd": "7.19",
+      "weight": "150 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "64",
+      "name": "Camembert Cheese",
+      "price_usd": "6.79",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "65",
+      "name": "Parmesan Cheese",
+      "price_usd": "8.49",
+      "weight": "300 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "66",
+      "name": "Pecorino Romano Cheese",
+      "price_usd": "7.99",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "67",
+      "name": "Goat Cheese",
+      "price_usd": "5.99",
+      "weight": "200 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "68",
+      "name": "Feta Cheese",
+      "price_usd": "4.99",
+      "weight": "200 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "69",
+      "name": "Havarti Cheese",
+      "price_usd": "5.49",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "70",
+      "name": "Swiss Cheese",
+      "price_usd": "6.29",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "71",
+      "name": "Manchego Cheese",
+      "price_usd": "7.49",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "72",
+      "name": "Emmental Cheese",
+      "price_usd": "6.49",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "73",
+      "name": "Roquefort Cheese",
+      "price_usd": "8.99",
+      "weight": "150 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "74",
+      "name": "Edam Cheese",
+      "price_usd": "5.79",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "75",
+      "name": "Mascarpone Cheese",
+      "price_usd": "4.99",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "76",
+      "name": "Smoked Gouda Cheese",
+      "price_usd": "6.29",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "77",
+      "name": "Asiago Cheese",
+      "price_usd": "6.99",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "78",
+      "name": "Grana Padano Cheese",
+      "price_usd": "7.49",
+      "weight": "300 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "79",
+      "name": "Cottage Cheese",
+      "price_usd": "3.99",
+      "weight": "400 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "80",
+      "name": "Cheddar Cheese (Aged)",
+      "price_usd": "6.79",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "81",
+      "name": "Basmati Rice",
+      "price_usd": "4.49",
+      "weight": "1000 g",
+      "category": "Grains"
+    },
+    {
+      "id": "82",
+      "name": "Jasmine Rice",
+      "price_usd": "4.29",
+      "weight": "1000 g",
+      "category": "Grains"
+    },
+    {
+      "id": "83",
+      "name": "Quinoa",
+      "price_usd": "5.49",
+      "weight": "500 g",
+      "category": "Grains"
+    },
+    {
+      "id": "84",
+      "name": "Whole Grain Pasta",
+      "price_usd": "2.99",
+      "weight": "500 g",
+      "category": "Pasta"
+    },
+    {
+      "id": "85",
+      "name": "Spaghetti",
+      "price_usd": "2.49",
+      "weight": "500 g",
+      "category": "Pasta"
+    },
+    {
+      "id": "86",
+      "name": "Macaroni",
+      "price_usd": "2.39",
+      "weight": "500 g",
+      "category": "Pasta"
+    },
+    {
+      "id": "87",
+      "name": "Gluten Free Pasta",
+      "price_usd": "3.99",
+      "weight": "500 g",
+      "category": "Pasta"
+    },
+    {
+      "id": "88",
+      "name": "Lentils",
+      "price_usd": "3.49",
+      "weight": "500 g",
+      "category": "Legumes"
+    },
+    {
+      "id": "89",
+      "name": "Chickpeas",
+      "price_usd": "3.29",
+      "weight": "500 g",
+      "category": "Legumes"
+    },
+    {
+      "id": "90",
+      "name": "Black Beans",
+      "price_usd": "2.99",
+      "weight": "500 g",
+      "category": "Legumes"
+    },
+    {
+      "id": "91",
+      "name": "Olive Oil Extra Virgin",
+      "price_usd": "9.99",
+      "weight": "750 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "92",
+      "name": "Sunflower Oil",
+      "price_usd": "7.99",
+      "weight": "1000 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "93",
+      "name": "Canola Oil",
+      "price_usd": "6.99",
+      "weight": "1000 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "94",
+      "name": "Apple Cider Vinegar",
+      "price_usd": "4.49",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "95",
+      "name": "Balsamic Vinegar",
+      "price_usd": "5.79",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "96",
+      "name": "Soy Sauce",
+      "price_usd": "3.49",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "97",
+      "name": "Tomato Ketchup",
+      "price_usd": "2.99",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "98",
+      "name": "Yellow Mustard",
+      "price_usd": "2.79",
+      "weight": "400 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "99",
+      "name": "Mayonnaise",
+      "price_usd": "3.99",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "100",
+      "name": "Peanut Butter",
+      "price_usd": "4.49",
+      "weight": "500 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "101",
+      "name": "Almond Butter",
+      "price_usd": "6.99",
+      "weight": "350 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "102",
+      "name": "Hazelnut Spread",
+      "price_usd": "5.99",
+      "weight": "400 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "103",
+      "name": "Strawberry Jam",
+      "price_usd": "3.49",
+      "weight": "350 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "104",
+      "name": "Apricot Jam",
+      "price_usd": "3.79",
+      "weight": "350 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "105",
+      "name": "Orange Marmalade",
+      "price_usd": "3.99",
+      "weight": "350 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "106",
+      "name": "Honey",
+      "price_usd": "5.49",
+      "weight": "500 g",
+      "category": "Spreads"
+    },
+    {
+      "id": "107",
+      "name": "Maple Syrup",
+      "price_usd": "7.99",
+      "weight": "500 ml",
+      "category": "Spreads"
+    },
+    {
+      "id": "108",
+      "name": "Granola Cereal",
+      "price_usd": "4.99",
+      "weight": "500 g",
+      "category": "Cereals"
+    },
+    {
+      "id": "109",
+      "name": "Corn Flakes",
+      "price_usd": "3.49",
+      "weight": "500 g",
+      "category": "Cereals"
+    },
+    {
+      "id": "110",
+      "name": "Oatmeal",
+      "price_usd": "3.79",
+      "weight": "500 g",
+      "category": "Cereals"
+    },
+    {
+      "id": "111",
+      "name": "Choco Pops",
+      "price_usd": "4.29",
+      "weight": "500 g",
+      "category": "Cereals"
+    },
+    {
+      "id": "112",
+      "name": "Muesli",
+      "price_usd": "4.99",
+      "weight": "500 g",
+      "category": "Cereals"
+    },
+    {
+      "id": "113",
+      "name": "Almond Milk",
+      "price_usd": "3.99",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "114",
+      "name": "Soy Milk",
+      "price_usd": "3.49",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "115",
+      "name": "Oat Milk",
+      "price_usd": "3.29",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "116",
+      "name": "Coconut Milk (Beverage)",
+      "price_usd": "3.59",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "117",
+      "name": "Rice Milk",
+      "price_usd": "3.49",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "118",
+      "name": "Orange Soda",
+      "price_usd": "1.49",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "119",
+      "name": "Cola Drink",
+      "price_usd": "1.49",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "120",
+      "name": "Lemon Lime Soda",
+      "price_usd": "1.49",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "121",
+      "name": "Energy Drink Original",
+      "price_usd": "2.49",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "122",
+      "name": "Sparkling Water",
+      "price_usd": "1.29",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "123",
+      "name": "Still Water",
+      "price_usd": "0.99",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "124",
+      "name": "Herbal Tea (Chamomile)",
+      "price_usd": "3.99",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "125",
+      "name": "Black Tea (Iced)",
+      "price_usd": "2.99",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "126",
+      "name": "Green Tea (Iced)",
+      "price_usd": "2.99",
+      "weight": "500 ml",
+      "category": "Beverages"
+    },
+    {
+      "id": "127",
+      "name": "Canned Tuna in Oil",
+      "price_usd": "2.49",
+      "weight": "150 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "128",
+      "name": "Canned Sardines in Tomato Sauce",
+      "price_usd": "2.29",
+      "weight": "125 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "129",
+      "name": "Canned Corn",
+      "price_usd": "1.79",
+      "weight": "300 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "130",
+      "name": "Canned Peas",
+      "price_usd": "1.69",
+      "weight": "300 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "131",
+      "name": "Canned Mixed Vegetables",
+      "price_usd": "2.19",
+      "weight": "400 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "132",
+      "name": "Canned Beans",
+      "price_usd": "1.89",
+      "weight": "400 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "133",
+      "name": "Canned Soup (Chicken Noodle)",
+      "price_usd": "2.99",
+      "weight": "400 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "134",
+      "name": "Canned Tomatoes (Diced)",
+      "price_usd": "1.99",
+      "weight": "400 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "135",
+      "name": "Canned Pineapple Slices",
+      "price_usd": "2.49",
+      "weight": "400 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "136",
+      "name": "Canned Peach Halves",
+      "price_usd": "2.49",
+      "weight": "400 g",
+      "category": "Canned Goods"
+    },
+    {
+      "id": "137",
+      "name": "Frozen Peas",
+      "price_usd": "2.99",
+      "weight": "500 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "138",
+      "name": "Frozen Mixed Berries",
+      "price_usd": "4.99",
+      "weight": "500 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "139",
+      "name": "Frozen Pizza Margherita",
+      "price_usd": "5.99",
+      "weight": "450 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "140",
+      "name": "Frozen French Fries",
+      "price_usd": "3.49",
+      "weight": "1000 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "141",
+      "name": "Frozen Chicken Nuggets",
+      "price_usd": "6.49",
+      "weight": "750 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "142",
+      "name": "Frozen Fish Fillets",
+      "price_usd": "7.99",
+      "weight": "600 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "143",
+      "name": "Frozen Lasagna",
+      "price_usd": "8.99",
+      "weight": "500 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "144",
+      "name": "Frozen Green Beans",
+      "price_usd": "2.79",
+      "weight": "500 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "145",
+      "name": "Frozen Spinach",
+      "price_usd": "2.79",
+      "weight": "500 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "146",
+      "name": "Frozen Ice Cream Vanilla",
+      "price_usd": "4.99",
+      "weight": "1000 ml",
+      "category": "Frozen"
+    },
+    {
+      "id": "147",
+      "name": "Frozen Ice Cream Chocolate",
+      "price_usd": "4.99",
+      "weight": "1000 ml",
+      "category": "Frozen"
+    },
+    {
+      "id": "148",
+      "name": "Frozen Ice Cream Strawberry",
+      "price_usd": "4.99",
+      "weight": "1000 ml",
+      "category": "Frozen"
+    },
+    {
+      "id": "149",
+      "name": "Frozen Garlic Bread",
+      "price_usd": "3.49",
+      "weight": "400 g",
+      "category": "Frozen"
+    },
+    {
+      "id": "150",
+      "name": "Baby Carrots Snack Pack",
+      "price_usd": "1.99",
+      "weight": "250 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "151",
+      "name": "Sliced Apples Snack Pack",
+      "price_usd": "2.49",
+      "weight": "200 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "152",
+      "name": "Greek Yogurt (Plain)",
+      "price_usd": "1.49",
+      "weight": "150 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "153",
+      "name": "Greek Yogurt (Strawberry)",
+      "price_usd": "1.69",
+      "weight": "150 g",
+      "category": "Dairy"
+    },
+    {
+      "id": "154",
+      "name": "Chocolate Milk",
+      "price_usd": "2.49",
+      "weight": "1000 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "155",
+      "name": "Whipping Cream",
+      "price_usd": "3.49",
+      "weight": "500 ml",
+      "category": "Dairy"
+    },
+    {
+      "id": "156",
+      "name": "Mozzarella Cheese",
+      "price_usd": "5.29",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "157",
+      "name": "Provolone Cheese",
+      "price_usd": "5.79",
+      "weight": "250 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "158",
+      "name": "Burrata Cheese",
+      "price_usd": "6.99",
+      "weight": "200 g",
+      "category": "Cheeses"
+    },
+    {
+      "id": "159",
+      "name": "Red Wine Vinegar",
+      "price_usd": "3.49",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "160",
+      "name": "White Wine Vinegar",
+      "price_usd": "3.29",
+      "weight": "500 ml",
+      "category": "Condiments"
+    },
+    {
+      "id": "161",
+      "name": "Organic Eggs",
+      "price_usd": "3.99",
+      "weight": "12 pcs",
+      "category": "Dairy"
+    },
+    {
+      "id": "162",
+      "name": "Free Range Eggs",
+      "price_usd": "4.49",
+      "weight": "12 pcs",
+      "category": "Dairy"
+    },
+    {
+      "id": "163",
+      "name": "Plain Bagels",
+      "price_usd": "2.99",
+      "weight": "400 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "164",
+      "name": "Everything Bagels",
+      "price_usd": "3.49",
+      "weight": "400 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "165",
+      "name": "Multigrain Bread",
+      "price_usd": "3.49",
+      "weight": "600 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "166",
+      "name": "Whole Wheat Bread",
+      "price_usd": "2.99",
+      "weight": "600 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "167",
+      "name": "Raisin Bread",
+      "price_usd": "3.79",
+      "weight": "500 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "168",
+      "name": "Pumpernickel Bread",
+      "price_usd": "3.99",
+      "weight": "500 g",
+      "category": "Bakery"
+    },
+    {
+      "id": "169",
+      "name": "Whole Chicken",
+      "price_usd": "12.99",
+      "weight": "2000 g",
+      "category": "Meats"
+    },
+    {
+      "id": "170",
+      "name": "Ground Beef",
+      "price_usd": "8.49",
+      "weight": "1000 g",
+      "category": "Meats"
+    },
+    {
+      "id": "171",
+      "name": "Lamb Chops",
+      "price_usd": "14.99",
+      "weight": "800 g",
+      "category": "Meats"
+    },
+    {
+      "id": "172",
+      "name": "Pork Sausages",
+      "price_usd": "6.99",
+      "weight": "500 g",
+      "category": "Meats"
+    },
+    {
+      "id": "173",
+      "name": "Turkey Mince",
+      "price_usd": "7.49",
+      "weight": "500 g",
+      "category": "Meats"
+    },
+    {
+      "id": "174",
+      "name": "Smoked Salmon",
+      "price_usd": "10.99",
+      "weight": "200 g",
+      "category": "Meats"
+    },
+    {
+      "id": "175",
+      "name": "Ham Slices",
+      "price_usd": "4.99",
+      "weight": "250 g",
+      "category": "Meats"
+    },
+    {
+      "id": "176",
+      "name": "Pastrami Slices",
+      "price_usd": "5.49",
+      "weight": "250 g",
+      "category": "Meats"
+    },
+    {
+      "id": "177",
+      "name": "Prosciutto",
+      "price_usd": "6.99",
+      "weight": "150 g",
+      "category": "Meats"
+    },
+    {
+      "id": "178",
+      "name": "Bacon (Thick Cut)",
+      "price_usd": "6.49",
+      "weight": "300 g",
+      "category": "Meats"
+    },
+    {
+      "id": "179",
+      "name": "Organic Bananas",
+      "price_usd": "0.79",
+      "weight": "150 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "180",
+      "name": "Organic Apples",
+      "price_usd": "1.29",
+      "weight": "200 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "181",
+      "name": "Organic Tomatoes",
+      "price_usd": "2.49",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "182",
+      "name": "Organic Carrots",
+      "price_usd": "2.29",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "183",
+      "name": "Organic Spinach",
+      "price_usd": "3.49",
+      "weight": "250 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "184",
+      "name": "Organic Strawberries",
+      "price_usd": "4.99",
+      "weight": "400 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "185",
+      "name": "Organic Blueberries",
+      "price_usd": "5.99",
+      "weight": "300 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "186",
+      "name": "Organic Zucchini",
+      "price_usd": "2.49",
+      "weight": "300 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "187",
+      "name": "Organic Broccoli",
+      "price_usd": "2.79",
+      "weight": "400 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "188",
+      "name": "Organic Potatoes",
+      "price_usd": "3.49",
+      "weight": "1000 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "189",
+      "name": "Red Potatoes",
+      "price_usd": "2.99",
+      "weight": "1000 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "190",
+      "name": "Sweet Potatoes",
+      "price_usd": "3.49",
+      "weight": "1000 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "191",
+      "name": "Yellow Onions",
+      "price_usd": "1.79",
+      "weight": "1000 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "192",
+      "name": "Red Onions",
+      "price_usd": "1.99",
+      "weight": "1000 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "193",
+      "name": "Garlic Bulb",
+      "price_usd": "0.99",
+      "weight": "100 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "194",
+      "name": "Ginger Root",
+      "price_usd": "2.49",
+      "weight": "200 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "195",
+      "name": "Fresh Basil",
+      "price_usd": "1.49",
+      "weight": "50 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "196",
+      "name": "Fresh Parsley",
+      "price_usd": "1.29",
+      "weight": "50 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "197",
+      "name": "Fresh Cilantro",
+      "price_usd": "1.29",
+      "weight": "50 g",
+      "category": "Vegetables"
+    },
+    {
+      "id": "198",
+      "name": "Avocado",
+      "price_usd": "1.49",
+      "weight": "200 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "199",
+      "name": "Limes",
+      "price_usd": "0.69",
+      "weight": "100 g",
+      "category": "Fruits"
+    },
+    {
+      "id": "200",
+      "name": "Lemons",
+      "price_usd": "0.79",
+      "weight": "150 g",
+      "category": "Fruits"
+    }
+  ];
+
+  let timeoutId = null;
+
+  function renderProducts(filteredProducts) {
+    const productList = document.getElementById('productList');
+
+    if (filteredProducts.length > 0) {
+      productList.innerHTML = filteredProducts.map(product => `
+      <li class="bg-white p-6 rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-2xl font-semibold text-gray-800">${product.name}</h3>
+            <p class="text-gray-800 mt-1">${product.category}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-bold text-indigo-800">$${product.price_usd}</p>
+            <p class="text-gray-800">${product.weight}</p>
+          </div>
+        </div>
+      </li>
+    `).join('');
+    } else {
+      productList.innerHTML = `<p class='text-center text-4xl text-indigo-800'>No products found</p>`
+    }
+  }
+
+  function performSearch() {
+    const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+    const loading = document.getElementById('loading');
+    const invitation = document.getElementById('invitation');
+    const productList = document.getElementById('productList');
+
+    // If search field is empty, clear results and show invitation message.
+    if (searchTerm === "") {
+      productList.innerHTML = "";
+      invitation.classList.remove("hidden");
+      return;
+    } else {
+      invitation.classList.add("hidden");
+    }
+
+    loading.classList.remove('hidden');
+
+    const filtered = products.filter(product =>
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm)
+    );
+
+    setTimeout(() => {
+      renderProducts(filtered);
+      loading.classList.add('hidden');
+    }, 1000);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(performSearch, 1000);
+  });
+</script>
+</body>
+</html>
